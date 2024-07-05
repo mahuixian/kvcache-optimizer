@@ -38,9 +38,7 @@ class Llama:
         self.max_seq_len = max_seq_len
         self.max_batch_size = max_batch_size
         self.model = self.build(model_path, max_seq_len, max_batch_size, model_parallel_size, seed)
-        # self.formatter = ChatFormat(self.tokenizer)
-        
-        
+            
     
     @torch.inference_mode()
     def generate(

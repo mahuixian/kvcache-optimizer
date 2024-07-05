@@ -125,25 +125,7 @@ class Attention(nn.Module):
             bias=False,
             input_is_parallel=True,
             init_method=lambda x: x,
-        )
-
-        self.cache_k = torch.zeros(
-            (
-                args.max_batch_size,
-                args.max_seq_len,
-                self.n_local_kv_heads,
-                self.head_dim,
-            )
-        ).cuda()
-        self.cache_v = torch.zeros(
-            (
-                args.max_batch_size,
-                args.max_seq_len,
-                self.n_local_kv_heads,
-                self.head_dim,
-            )
-        ).cuda()
-        
+        ) 
     
     def forward(self, 
             x: torch.Tensor, 
@@ -157,12 +139,12 @@ class Attention(nn.Module):
         xq = xq.view(bsz, seqlen, self.n_local_heads, self.head_dim)
         xk = xk.view(bsz, seqlen, self.n_local_kv_heads, self.head_dim)
         xv = xv.view(bsz, seqlen, self.n_local_kv_heads, self.head_dim)
+
         
         if past_key_value is not None:
-            seqlen += past_key_value[0].size(1)
             xk = torch.cat([past_key_value[0], xk], dim=1)
             xv = torch.cat([past_key_value[1], xv], dim=1)
-             
+        
         past_key_value = (xk, xv)
         
         xq, xk = apply_rotary_emb(xq, xk, freqs_cis=freqs_cis)
@@ -181,8 +163,8 @@ class Attention(nn.Module):
         output = torch.matmul(scores, values)
         output = output.transpose(1, 2).contiguous().view(bsz, seqlen, -1)
         output = self.wo(output)
-        return output, past_key_value
-            
+        return output, past_key_value 
+        
 
 class FeedForward(nn.Module):
     def __init__(
@@ -297,9 +279,11 @@ class Transformer(nn.Module):
             mask = torch.hstack(
                 [torch.zeros((seqlen, start_pos), device=tokens.device), mask]
             ).type_as(h)
+            if past_key_values[0] is not None:
+                mask = torch.hstack([torch.zeros((seqlen, past_key_values[0][0].size(1)), device=tokens.device), mask]).type_as(h)
 
         for i, layer in enumerate(self.layers):
-            h, past_key_value = layer(h, start_pos, freqs_cis, mask, past_key_values[i])
+            h, past_key_value = layer(h, freqs_cis, mask, past_key_values[i])
             past_key_values[i] = past_key_value
         h = self.norm(h)
         output = self.output(h).float()
