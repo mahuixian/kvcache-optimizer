@@ -37,13 +37,13 @@ class H2O:
         self.v_slice = DIM_TO_SLICE(v_seq_dim)
         
     
-    def __call__(self, past_key_values, attn_scores):
-        if past_key_values is None:
+    def __call__(self, past_key_value, attn_scores):
+        if past_key_value is None:
             return None
         
-        kv_len = past_key_values[0][0].shape[self.k_seq_dim]
+        kv_len = past_key_value[0].shape[self.k_seq_dim]
         if kv_len <= self.cache_size:
-            return past_key_values
+            return past_key_value
         
         #已测试，需要按照头将注意力合并，再去获取indices
         attn_scores = attn_scores.sum(1).sum(1) #(bsz, num_heads, seq_len, kv_len) #(bsz, seq_len, kv_len) #(bsz, kv_len)
@@ -52,12 +52,10 @@ class H2O:
         keep_recent_indices = torch.arange(kv_len - self.cache_size, kv_len).unsqueeze(0).expand(topk_indices.shape[0], -1)
         keep_indices = torch.cat([topk_indices, keep_recent_indices], dim=-1) #(bsz, self.cache_size)
         assert keep_indices.size(-1) == self.cache_size
-        return [
-            (
-                self.k_slice(k, keep_indices),
-                self.v_slice(v, keep_indices)
+        
+        return  (
+                self.k_slice(past_key_value[0], keep_indices),
+                self.v_slice(past_key_value[1], keep_indices)
             )
-            for k, v in past_key_values
-        ]
         
         
