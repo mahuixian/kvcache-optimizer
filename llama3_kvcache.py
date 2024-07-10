@@ -28,7 +28,6 @@ def inference_h2o(model, tokenizer, formatter, samples, max_gen_len):
     for sample in samples:
         input_ids = [formatter.encode_dialog_prompt(sample)]
         
-    
 
 
 def main(model_path, tokenizer_path, testfile_path, max_gen_len, item):

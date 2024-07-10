@@ -286,7 +286,7 @@ class TransformerBlock():
 
 
 class Transformer(nn.Module):
-    def __init__(self, params: ModelArgs):
+    def __init__(self, params: ModelArgs, item: str):
         super().__init__()
         self.params = params
         self.vocab_size = params.vocab_size
@@ -298,7 +298,7 @@ class Transformer(nn.Module):
         
         self.layers = torch.nn.ModuleList()
         for layer_id in range(params.n_layers):
-            self.layers.append(TransformerBlock(layer_id, params))
+            self.layers.append(TransformerBlock(layer_id, params, item))
         
         
         self.norm = RMSNorm(params.dim, eps=params.norm_eps)
