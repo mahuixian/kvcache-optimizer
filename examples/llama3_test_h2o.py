@@ -1,7 +1,6 @@
 from tqdm import tqdm
 from llama.generation import Llama
 from utils.utils import load_jsonl
-from kvcache.streamingllm import StreamingLLM
 
 def inference(model_path, tokenizer_path, data_path, max_batch_size, item):
     llama = Llama.build(
@@ -29,9 +28,6 @@ def inference(model_path, tokenizer_path, data_path, max_batch_size, item):
         
         answer = "".join([tokenizer.decode(token) for token in out_tokens])
         print(answer)
-        if item == "streamingllm":
-            tool = StreamingLLM()
-            past_key_values = tool(past_key_values)
         
 
 if __name__ == '__main__':
@@ -40,5 +36,5 @@ if __name__ == '__main__':
         tokenizer_path="./models/llama-7b/tokenizer.model",
         data_path="./data/test.jsonl",
         max_batch_size=1,
-        item="streamingllm",
+        item="h2o",
     )
