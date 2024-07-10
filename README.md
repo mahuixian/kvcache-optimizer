@@ -18,6 +18,21 @@ https://arxiv.org/pdf/2306.14048v1
 
 ![image.png](/img/1720167597632-482e02cf-a37d-4429-92af-b2f6467cbca4.png)
 
-
-
 一般来说attention scores的size为（bsz, num_heads, seq_len, kv_len），需要先按照num_heads将attention scores相加，然后按照seq_len的维度将attention scores相加，得到最终的重要性分数。
+
+## SnapKV
+
+SnapKV是一种高效压缩LLM中KV Cache的方法。
+
+![image-20240710165634463](/img/image-20240710165634463.png)
+
+关键步骤：
+
+- 基于Observation Window计算Prompt各个位置的注意力权重之和行
+
+- 使用1维Pooling进行权重聚类,选出Top-k的位置索引行
+
+- 利用gather操作提取选中位置的Key和Value行
+
+- 将压缩的KV与Observation Window对应的KV拼接,得到最终结果行
+
