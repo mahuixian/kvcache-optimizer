@@ -122,7 +122,7 @@ class Llama:
                  temperature: float = 0.8,
                  top_p: float = 0.95,
                  past_key_values: Optional[List[Tuple[torch.Tensor]]] = None,
-                 logprobs: bool = False,
+                #  logprobs: bool = False,
                  echo: bool = False,
                  ):
         
@@ -159,10 +159,7 @@ class Llama:
 
         for k, t in enumerate(input_ids):
             tokens[k, :len(t)] = torch.tensor(t, dtype=torch.long, device="cuda")
-        
-        if logprobs:
-            token_logprobs = torch.zeros_like(tokens, dtype=torch.float32)
-    
+
         eos_reached = torch.tensor([False] * bsz, device="cuda")
         input_text_mask = tokens != pad_id
         stop_tokens = torch.tensor(list(self.tokenizer.stop_tokens))
@@ -170,8 +167,12 @@ class Llama:
         #prefill
         pre_tokens = tokens[:, :min_prompt_len]
         logits, past_key_values = self.model(pre_tokens, past_key_values)
+        
+        if min_prompt_len == total_len:
+            #没有空间给生成
+            return [], past_key_values
+        
         next_token = sample(logits, temperature, top_p)
-        #这边需要考虑一个问题，min_prompt_len == total_len,容易out of index
         next_token = torch.where(
             input_text_mask[:, min_prompt_len], tokens[:, min_prompt_len], next_token
         )
@@ -198,22 +199,18 @@ class Llama:
             start = 0 if echo else len(input_ids[i])
             toks = toks[start : len(input_ids[i]) + max_gen_len]
             probs = None
-            if logprobs:
-                probs = token_logprobs[i][start : len(input_ids[i]) + max_gen_len]
             # cut to after eos tok if any
             for stop_token in self.tokenizer.stop_tokens:
                 try:
                     eos_idx = toks.index(stop_token)
                     toks = toks[:eos_idx]
-                    probs = probs[:eos_idx] if logprobs else None
                 except ValueError:
                     pass
             out_tokens.append(toks)
             out_logprobs.append(probs)
             
-        return (past_key_values, out_tokens, out_logprobs if logprobs else None)
+        return out_tokens, past_key_values
             
-
 
 def sample(logits, temperature, top_p):
     if temperature > 0:
