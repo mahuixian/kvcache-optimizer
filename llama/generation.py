@@ -14,7 +14,6 @@ from fairscale.nn.model_parallel.initialize import (
     model_parallel_is_initialized,
 )
 
-
 class CompletionPrediction(TypedDict, total=False):
     generated: str
     tokens: List[int]
