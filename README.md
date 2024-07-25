@@ -14,7 +14,7 @@ streamingllm会单独分出一部分内存来存储和重用attention sink和rol
 
 https://arxiv.org/pdf/2306.14048v1
 
-在Attention机制中，attention分数比较大的token对计算结果的影响比较大，H2O将这些tokens称为Heavy Hitters（H2），只要保证保留的KV Cache中存在H2，即可确保结果。所以H2O通过贪心算法，将当前token与其他token的注意力按列相加即得到当前token的重要性分数，然后将分数低的token丢弃即可。
+H2O引入了一个基于累计注意力得分的贪婪选择算法的KV缓存驱逐策略，在生成步骤中基于得分选择标记。
 
 ![image.png](/img/1720167597632-482e02cf-a37d-4429-92af-b2f6467cbca4.png)
 
@@ -23,6 +23,12 @@ https://arxiv.org/pdf/2306.14048v1
 ## SnapKV
 
 SnapKV是一种高效压缩LLM中KV Cache的方法。
+
+根据实验观察到：
+
+- 无论生成的上下文长度如何，特定键在prompt中始终显示出较高的注意力权重，这些“活跃”的键遵循与prompt的结构和内容内在相关且稳定的模式。
+- 在长摘要和问答任务中，问题在prompt中的位置（开头或结尾）不会显著改变观察到的注意力模式的稳定性。这表明，无论问题的位置如何，都可以轻松获取相关特征的注意力
+- 观察到的注意力模式与用户提出的 特定指令有很强的关联，表明上下文感知的关键值（KV）压缩方法可能带来更好的性能
 
 ![image-20240710165634463](/img/image-20240710165634463.png)
 
@@ -36,3 +42,14 @@ SnapKV是一种高效压缩LLM中KV Cache的方法。
 
 - 将压缩的KV与Observation Window对应的KV拼接,得到最终结果行
 
+
+
+# Dual chunk Attention
+
+块内attention，块间attention计算以及连续块attention计算。
+
+paper：https://arxiv.org/html/2402.17463v2
+
+code：https://github.com/HKUNLP/ChunkLlama.
+
+![image-20240725143425244](/img/image-20240725143425244.png)

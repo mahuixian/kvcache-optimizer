@@ -219,6 +219,7 @@ class ChatFormat:
         tokens.append(self.tokenizer.special_tokens["<|eot_id|>"])
         return tokens
 
+    # |begin_of_text| |start_header_id| message['role] |end_header_id| message['content] |eot_id| |start_header_id| message['role] |end_header_id| message['content] |eot_id|
     def encode_dialog_prompt(self, dialog: Dialog) -> List[int]:
         tokens = []
         tokens.append(self.tokenizer.special_tokens["<|begin_of_text|>"])
