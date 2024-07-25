@@ -1,4 +1,4 @@
-# 通过优化KV Cache，提升LLM提升长文本外推性能
+# 通过优化KV Cache，提升LLM长文本外推性能
 
 ## StreamingLLM
 
